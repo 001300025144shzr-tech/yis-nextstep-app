@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=375px, initial-scale=1.0">
+<title>YIS NextStep</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --grad: linear-gradient(135deg, #3318B0 0%, #7030CC 50%, #FF6B35 100%);
+  --violet: #3318B0; --purple: #7030CC; --orange: #FF6B35;
+  --orange-lt: #FFF0E8; --orange-bd: #FFD5BC;
+  --violet-lt: #EDEAFF; --violet-bd: #C8C0F8;
+  --bg: #F5F4FF; --surface: #FFFFFF;
+  --text-primary: #1A1040; --text-secondary: #5A5280; --text-hint: #9890C8;
+  --border: #E2DEFF;
+  --blue-lt: #E8F3FF; --blue-bd: #B8D6FF;
+  --green-lt: #EAFADF; --green-bd: #C0ECA0;
+}
+body {
+  font-family: -apple-system,'Hiragino Sans','Hiragino Kaku Gothic ProN','Meiryo',sans-serif;
+  background: #C8C4E0; min-height:100vh;
+  display:flex; align-items:flex-start; justify-content:center; padding:24px 0 48px;
+}
+.phone {
+  width:375px; min-height:812px; background:var(--bg); border-radius:48px;
+  overflow:hidden; display:flex; flex-direction:column;
+  box-shadow:0 32px 80px rgba(51,24,176,.25),0 2px 8px rgba(0,0,0,.15); position:relative;
+}
+/* Status */
+.statusbar { height:44px; background:var(--violet); display:flex; align-items:center; justify-content:space-between; padding:0 24px; flex-shrink:0; }
+.statusbar-time { color:#fff; font-size:15px; font-weight:600; }
+.statusbar-icons { color:rgba(255,255,255,.9); font-size:13px; letter-spacing:2px; }
+/* Header */
+.header { background:var(--grad); padding:14px 18px 16px; flex-shrink:0; }
+.header-logo { color:#fff; font-size:19px; font-weight:800; letter-spacing:.3px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.header-logo-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.6); }
+.tab-row { display:flex; background:rgba(0,0,0,.18); border-radius:10px; padding:3px; gap:2px; }
+.tab { flex:1; text-align:center; color:rgba(255,255,255,.65); font-size:11px; font-weight:500; padding:7px 2px; border-radius:8px; cursor:pointer; transition:background .18s,color .18s; user-select:none; }
+.tab.active { background:rgba(255,255,255,.28); color:#fff; font-weight:700; }
+/* Screens */
+.screen { display:none; flex:1; flex-direction:column; overflow:hidden; }
+.screen.active { display:flex; }
+.scroll-area { flex:1; overflow-y:auto; padding:16px 16px 12px; -webkit-overflow-scrolling:touch; }
+.scroll-area::-webkit-scrollbar { display:none; }
+/* ── HOME ── */
+.date-bar { display:flex; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px 14px; margin-bottom:14px; gap:8px; }
+.date-main { font-size:15px; font-weight:700; color:var(--text-primary); flex:1; }
+.period-badge { background:var(--orange); color:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+.subject-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:18px 16px 16px; margin-bottom:14px; }
+.eyebrow { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-hint); margin-bottom:6px; }
+.subject-name-big { font-size:30px; font-weight:800; color:var(--text-primary); letter-spacing:-.5px; line-height:1.1; margin-bottom:14px; }
+.section-label { font-size:11px; font-weight:600; color:var(--text-hint); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+.item-list { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.item-row { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text-secondary); }
+.item-dot { width:6px; height:6px; border-radius:50%; background:var(--purple); flex-shrink:0; }
+.hw-box { background:var(--orange-lt); border:1px solid var(--orange-bd); border-radius:12px; padding:12px 14px; margin-bottom:16px; }
+.hw-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#C04010; margin-bottom:5px; }
+.hw-view { font-size:13.5px; color:#7A3010; line-height:1.6; }
+.hw-input { width:100%; background:var(--orange-lt); border:none; outline:none; font-size:13.5px; color:#7A3010; line-height:1.6; font-family:inherit; resize:none; min-height:56px; }
+.btn-primary { width:100%; padding:13px; background:var(--grad); border:none; border-radius:14px; color:#fff; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity .15s; }
+.btn-primary:active { opacity:.85; }
+/* Next class */
+.next-card { background:#fff; border:1px solid var(--border); border-radius:16px; padding:14px 16px; cursor:pointer; transition:background .15s; }
+.next-card:active { background:var(--violet-lt); }
+.next-inner { display:flex; gap:10px; align-items:center; }
+.period-box { background:var(--blue-lt); border:1px solid var(--blue-bd); border-radius:10px; padding:8px 12px; text-align:center; min-width:52px; }
+.period-num-big { font-size:18px; font-weight:800; color:#0C44A0; }
+.period-unit { font-size:9px; font-weight:600; color:#4080CC; text-transform:uppercase; }
+.next-arrow { margin-left:auto; font-size:18px; color:var(--text-hint); }
+/* ── SCHEDULE ── */
+.sched-header-row { display:flex; align-items:center; margin-bottom:12px; gap:8px; }
+.sched-title { font-size:16px; font-weight:700; color:var(--text-primary); }
+.grid-wrap { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:10px 8px 12px; }
+.grid-header { display:grid; grid-template-columns:24px repeat(5,1fr); gap:3px; margin-bottom:4px; }
+.grid-day { text-align:center; font-size:12px; font-weight:700; color:var(--text-hint); padding:4px 0; }
+.grid-day.today { color:var(--orange); }
+.grid-body { display:flex; flex-direction:column; gap:3px; }
+.grid-row { display:grid; grid-template-columns:24px repeat(5,1fr); gap:3px; }
+.p-num { display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; color:var(--text-hint); }
+.cell { height:44px; border-radius:8px; border:1px solid var(--border); background:#FAFAFF; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2px 3px; transition:opacity .12s; position:relative; }
+.cell:active { opacity:.7; }
+.cell-empty { background:#F8F7FF; border-style:dashed; }
+.cell.cv { background:#EDEBFF; border-color:#C8C0F8; }
+.cell.co { background:#FFF0E8; border-color:#FFD5BC; }
+.cell.cb { background:#E8F3FF; border-color:#B8D6FF; }
+.cell.cg { background:#EAFADF; border-color:#C0ECA0; }
+.cell-subj { font-size:8.5px; font-weight:700; line-height:1.25; text-align:center; color:#3318B0; }
+.cell.co .cell-subj { color:#C04010; }
+.cell.cb .cell-subj { color:#0C44A0; }
+.cell.cg .cell-subj { color:#2A6010; }
+/* Arrow btn in schedule */
+.arrow-btn { display:inline-flex; align-items:center; justify-content:center; background:var(--violet-lt); border:1px solid var(--violet-bd); border-radius:20px; padding:3px 8px; font-size:11px; font-weight:600; color:var(--violet); cursor:pointer; white-space:nowrap; gap:3px; }
+.arrow-btn:active { background:#D8D4FF; }
+/* Legend */
+.legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--text-secondary); }
+.legend-dot { width:10px; height:10px; border-radius:3px; }
+/* ── CONTENT INPUT ── */
+.back-btn { display:flex; align-items:center; gap:6px; color:var(--violet); font-size:14px; font-weight:600; cursor:pointer; padding:2px 0 12px; }
+.ci-subject-title { font-size:22px; font-weight:800; color:var(--text-primary); margin-bottom:4px; }
+.ci-subtitle { font-size:12px; color:var(--text-hint); margin-bottom:16px; }
+.ci-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px 16px; margin-bottom:12px; }
+.ci-section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-hint); margin-bottom:10px; }
+.ci-textarea { width:100%; border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:14px; color:var(--text-primary); font-family:inherit; resize:none; min-height:72px; outline:none; background:var(--bg); line-height:1.6; }
+.ci-textarea:focus { border-color:var(--purple); }
+.ci-items-list { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+.ci-item-row { display:flex; align-items:center; gap:8px; }
+.ci-item-input { flex:1; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px; font-family:inherit; color:var(--text-primary); background:var(--bg); outline:none; }
+.ci-item-input:focus { border-color:var(--purple); }
+.ci-del-btn { width:28px; height:28px; border-radius:50%; background:#FEE8E8; border:none; color:#C03030; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.ci-add-item-btn { display:flex; align-items:center; gap:5px; font-size:13px; color:var(--purple); font-weight:600; background:none; border:none; cursor:pointer; padding:4px 0; }
+.save-btn { width:100%; padding:13px; background:var(--grad); border:none; border-radius:14px; color:#fff; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px; }
+/* Modal overlay */
+.modal-overlay { display:none; position:absolute; inset:0; background:rgba(26,16,64,.5); z-index:100; align-items:flex-end; }
+.modal-overlay.open { display:flex; }
+.modal-sheet { background:var(--surface); border-radius:24px 24px 0 0; width:100%; padding:20px 20px 36px; }
+.modal-title { font-size:16px; font-weight:700; color:var(--text-primary); margin-bottom:4px; }
+.modal-sub { font-size:12px; color:var(--text-hint); margin-bottom:16px; }
+.modal-input { width:100%; border:1px solid var(--border); border-radius:10px; padding:11px 14px; font-size:15px; font-family:inherit; color:var(--text-primary); outline:none; margin-bottom:14px; background:var(--bg); }
+.modal-input:focus { border-color:var(--purple); }
+.modal-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.modal-cancel { padding:12px; border:1px solid var(--border); border-radius:12px; background:none; font-size:14px; font-weight:600; color:var(--text-secondary); cursor:pointer; }
+.modal-ok { padding:12px; border:none; border-radius:12px; background:var(--grad); font-size:14px; font-weight:700; color:#fff; cursor:pointer; }
+/* Bottom nav */
+.bottomnav { background:var(--surface); border-top:1px solid var(--border); display:flex; padding:6px 0 20px; flex-shrink:0; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 0 4px; cursor:pointer; user-select:none; }
+.nav-icon { font-size:22px; line-height:1; }
+.nav-label { font-size:10px; font-weight:500; color:var(--text-hint); }
+.nav-item.active .nav-label { color:var(--purple); font-weight:700; }
+.nav-dot { width:4px; height:4px; border-radius:50%; background:var(--purple); margin:-2px auto 0; opacity:0; }
+.nav-item.active .nav-dot { opacity:1; }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Status Bar -->
+  <div class="statusbar">
+    <span class="statusbar-time">9:41</span>
+    <span class="statusbar-icons">●●● WiFi ▐▐</span>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo"><div class="header-logo-dot"></div>YIS NextStep</div>
+    <div class="tab-row">
+      <div class="tab active" onclick="switchTo('home')">ホーム</div>
+      <div class="tab" onclick="switchTo('schedule')">時間割設定</div>
+      <div class="tab" onclick="switchTo('input')">内容入力</div>
+    </div>
+  </div>
+
+  <!-- ═══ HOME ═══ -->
+  <div class="screen active" id="s-home">
+    <div class="scroll-area">
+      <div class="date-bar">
+        <span class="date-main" id="home-day-label">金曜日</span>
+        <span class="period-badge" id="home-period-badge">3限目</span>
+      </div>
+
+      <!-- Prev class -->
+      <div class="next-card" onclick="promotePrevClass()" id="prev-card" style="margin-bottom:12px;">
+        <div class="eyebrow" style="margin-bottom:8px;">前の授業 <span style="font-size:10px;color:var(--text-hint);">（タップで現在の授業に切替）</span></div>
+        <div class="next-inner">
+          <div class="next-arrow" style="margin-left:0;margin-right:4px;">‹</div>
+          <div class="period-box">
+            <div class="period-num-big" id="prev-period-num">2</div>
+            <div class="period-unit">限目</div>
+          </div>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);" id="prev-subject-name"></div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;" id="prev-day-label"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subject-card">
+        <div class="eyebrow">現在の授業</div>
+        <div class="subject-name-big" id="home-subject-name">総合英語</div>
+
+        <div class="section-label">持ち物</div>
+        <div class="item-list" id="home-items-list"></div>
+
+        <div class="hw-box">
+          <div class="hw-label">📋 宿題</div>
+          <div id="hw-view-area">
+            <div class="hw-view" id="hw-view-text"></div>
+          </div>
+          <textarea class="hw-input" id="hw-input-field" style="display:none" placeholder="宿題を入力してください…" rows="3"></textarea>
+        </div>
+
+        <button class="btn-primary" id="home-edit-btn" onclick="toggleHwEdit()">
+          <span>✏️</span> 内容を変更する
+        </button>
+      </div>
+
+      <!-- Next class -->
+      <div class="next-card" onclick="promoteNextClass()" id="next-card">
+        <div class="eyebrow" style="margin-bottom:8px;">次の授業 <span style="font-size:10px;color:var(--text-hint);">（タップで現在の授業に切替）</span></div>
+        <div class="next-inner">
+          <div class="period-box">
+            <div class="period-num-big" id="next-period-num">4</div>
+            <div class="period-unit">限目</div>
+          </div>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);" id="next-subject-name">物理基礎</div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;" id="next-day-label"></div>
+          </div>
+          <div class="next-arrow">›</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCHEDULE ═══ -->
+  <div class="screen" id="s-schedule">
+    <div class="scroll-area">
+      <div class="sched-header-row">
+        <span class="sched-title">時間割設定</span>
+      </div>
+      <div class="grid-wrap">
+        <div class="grid-header">
+          <div></div>
+          <div class="grid-day">月</div>
+          <div class="grid-day today">火</div>
+          <div class="grid-day">水</div>
+          <div class="grid-day">木</div>
+          <div class="grid-day">金</div>
+        </div>
+        <div class="grid-body" id="schedule-grid-body"></div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#EDEBFF;border:1px solid #C8C0F8;"></div>紫系</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FFF0E8;border:1px solid #FFD5BC;"></div>オレンジ系</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E8F3FF;border:1px solid #B8D6FF;"></div>青系</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#EAFADF;border:1px solid #C0ECA0;"></div>緑系</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CONTENT INPUT ═══ -->
+  <div class="screen" id="s-input">
+    <div class="scroll-area">
+      <!-- Subject List View -->
+      <div id="ci-list-view">
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:14px;">授業の内容を編集</div>
+        <div id="ci-subject-list"></div>
+      </div>
+      <!-- Subject Detail View -->
+      <div id="ci-detail-view" style="display:none;">
+        <div class="back-btn" onclick="showCiList()">‹ 一覧に戻る</div>
+        <div class="ci-subject-title" id="ci-detail-name"></div>
+        <div class="ci-subtitle" id="ci-detail-days"></div>
+        <div class="ci-section">
+          <div class="ci-section-label">📋 宿題</div>
+          <textarea class="ci-textarea" id="ci-hw-input" placeholder="宿題を入力…"></textarea>
+        </div>
+        <div class="ci-section">
+          <div class="ci-section-label">🎒 持ち物</div>
+          <div class="ci-items-list" id="ci-items-container"></div>
+          <button class="ci-add-item-btn" onclick="addCiItem()">＋ 持ち物を追加</button>
+        </div>
+        <button class="save-btn" onclick="saveCiDetail()">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cell Name Modal -->
+  <div class="modal-overlay" id="cell-modal">
+    <div class="modal-sheet">
+      <div class="modal-title">授業名を入力</div>
+      <div class="modal-sub" id="modal-cell-pos"></div>
+      <input class="modal-input" id="modal-cell-input" type="text" placeholder="例：総合英語" maxlength="12">
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeModal()">キャンセル</button>
+        <button class="modal-ok" onclick="confirmCellName()">決定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottomnav">
+    <div class="nav-item active" id="nav-home" onclick="switchTo('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">ホーム</span>
+      <div class="nav-dot"></div>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="switchTo('schedule')">
+      <span class="nav-icon">📅</span>
+      <span class="nav-label">時間割</span>
+      <div class="nav-dot"></div>
+    </div>
+    <div class="nav-item" id="nav-input" onclick="switchTo('input')">
+      <span class="nav-icon">✏️</span>
+      <span class="nav-label">内容入力</span>
+      <div class="nav-dot"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   DATA
+══════════════════════════════════ */
+// timetable[period][dayIndex] = subjectName ('' = empty)
+// periods 0-6 = 1〜7限, days 0-4 = 月〜金
+const DAYS = 7; const COLS = 5;
+const DAY_NAMES = ['月','火','水','木','金'];
+
+let timetable = [
+  ['現代文','数学Ⅱ','英語','物理','体育'],
+  ['英語','現代文','数学Ⅱ','化学','物理'],
+  ['数学Ⅱ','化学','現代文','総合英語','数学Ⅱ'],
+  ['体育','総合英語','化学','','現代文'],
+  ['物理','体育','英語','数学Ⅱ','化学'],
+  ['英語','物理','','体育','英語'],
+  ['','','','',''],
+];
+
+// subjectData[name] = {hw, items:[]}
+let subjectData = {
+  '総合英語': { hw:'教科書 P.41, 43\n問題を解いて提出', items:['教科書','筆記用具','授業プリント'] },
+  '現代文':   { hw:'', items:['現代文の教科書','ノート'] },
+  '数学Ⅱ':   { hw:'', items:['数学の教科書','ノート','計算用紙'] },
+  '英語':     { hw:'', items:['英語の教科書','筆記用具'] },
+  '物理':     { hw:'', items:['物理の教科書','ノート'] },
+  '化学':     { hw:'', items:['化学の教科書','実験ノート'] },
+  '体育':     { hw:'', items:['体操服','タオル','水筒'] },
+};
+
+// Home state
+let homeCurrentPeriod = 2; // 0-indexed (= 3限目)
+let homeCurrentDay = 4;    // 0-indexed (= 金)
+
+function getSubjectData(name) {
+  if (!name) return { hw:'', items:[] };
+  if (!subjectData[name]) subjectData[name] = { hw:'', items:[] };
+  return subjectData[name];
+}
+
+function getAllSubjectNames() {
+  const s = new Set();
+  timetable.forEach(row => row.forEach(n => { if(n) s.add(n); }));
+  return Array.from(s).sort();
+}
+
+function getSubjectDays(name) {
+  const days = [];
+  timetable.forEach((row, pi) => {
+    row.forEach((n, di) => {
+      if(n === name) days.push(DAY_NAMES[di]+'曜'+(pi+1)+'限');
+    });
+  });
+  return days.join(' / ');
+}
+
+/* ══════════════════════════════════
+   COLOR
+══════════════════════════════════ */
+const COLOR_MAP = ['cv','co','cb','cg'];
+const colorCache = {};
+function getColor(name) {
+  if(!name) return '';
+  if(!colorCache[name]) {
+    const keys = Object.keys(colorCache);
+    const usedIdx = keys.map(k => colorCache[k]);
+    for(let i=0;i<COLOR_MAP.length;i++){
+      if(!usedIdx.includes(COLOR_MAP[i])){ colorCache[name]=COLOR_MAP[i]; break; }
+    }
+    if(!colorCache[name]){
+      colorCache[name] = COLOR_MAP[Object.keys(colorCache).length % COLOR_MAP.length];
+    }
+  }
+  return colorCache[name];
+}
+
+/* ══════════════════════════════════
+   NAV / SCREEN SWITCH
+══════════════════════════════════ */
+const screenMap = {
+  home:     { screen:'s-home',     nav:'nav-home',     tab:0 },
+  schedule: { screen:'s-schedule', nav:'nav-schedule', tab:1 },
+  input:    { screen:'s-input',    nav:'nav-input',    tab:2 },
+};
+
+function switchTo(key) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const m = screenMap[key];
+  document.getElementById(m.screen).classList.add('active');
+  document.getElementById(m.nav).classList.add('active');
+  document.querySelectorAll('.tab')[m.tab].classList.add('active');
+  if(key==='home') renderHome();
+  if(key==='schedule') renderScheduleGrid();
+  if(key==='input') { showCiList(); renderCiList(); }
+}
+
+/* ══════════════════════════════════
+   HOME
+══════════════════════════════════ */
+let hwEditing = false;
+
+// Find next class after (period, day), wrapping across days and weeks
+// Returns {period, day} or null
+function findNextClass(period, day) {
+  let np = period + 1, nd = day;
+  // Search rest of current day
+  while(np < DAYS) {
+    if(timetable[np][nd]) return {period:np, day:nd};
+    np++;
+  }
+  // Search subsequent days (wrap Mon–Fri cyclically)
+  for(let step=1; step<=4; step++){
+    nd = (day + step) % 5;
+    for(np=0; np<DAYS; np++){
+      if(timetable[np][nd]) return {period:np, day:nd};
+    }
+  }
+  return null;
+}
+
+// Find prev class before (period, day), wrapping backwards
+function findPrevClass(period, day) {
+  let pp = period - 1, pd = day;
+  while(pp >= 0) {
+    if(timetable[pp][pd]) return {period:pp, day:pd};
+    pp--;
+  }
+  for(let step=1; step<=4; step++){
+    pd = (day - step + 5) % 5;
+    for(pp=DAYS-1; pp>=0; pp--){
+      if(timetable[pp][pd]) return {period:pp, day:pd};
+    }
+  }
+  return null;
+}
+
+function renderHome() {
+  const name = timetable[homeCurrentPeriod][homeCurrentDay] || '（未設定）';
+  const data = getSubjectData(name);
+  document.getElementById('home-subject-name').textContent = name;
+  document.getElementById('home-period-badge').textContent = (homeCurrentPeriod+1)+'限目';
+  document.getElementById('home-day-label').textContent = DAY_NAMES[homeCurrentDay]+'曜日';
+
+  // items
+  const il = document.getElementById('home-items-list');
+  il.innerHTML = '';
+  if(data.items.length===0){
+    il.innerHTML = '<div style="font-size:13px;color:var(--text-hint);">持ち物の登録なし</div>';
+  } else {
+    data.items.forEach(it=>{
+      const d=document.createElement('div'); d.className='item-row';
+      d.innerHTML='<span class="item-dot"></span>'+it; il.appendChild(d);
+    });
+  }
+  // hw
+  const hwText = data.hw || '（未設定）';
+  document.getElementById('hw-view-text').innerHTML = hwText.replace(/\n/g,'<br>');
+  // prev / next
+  renderAdjacentClass('prev');
+  renderAdjacentClass('next');
+  // reset edit state
+  if(hwEditing) cancelHwEdit();
+}
+
+function renderAdjacentClass(dir) {
+  const found = dir==='next'
+    ? findNextClass(homeCurrentPeriod, homeCurrentDay)
+    : findPrevClass(homeCurrentPeriod, homeCurrentDay);
+  const card = document.getElementById(dir+'-card');
+  if(!found){ card.style.display='none'; return; }
+  card.style.display='';
+  const isCrossDay = found.day !== homeCurrentDay;
+  const dayStr = isCrossDay ? DAY_NAMES[found.day]+'曜 ' : '';
+  document.getElementById(dir+'-period-num').textContent = found.period+1;
+  document.getElementById(dir+'-subject-name').textContent = timetable[found.period][found.day] || '（未設定）';
+  document.getElementById(dir+'-day-label').textContent = dayStr + (found.period+1)+'限目';
+  card._targetPeriod = found.period;
+  card._targetDay = found.day;
+}
+
+function toggleHwEdit() {
+  if(!hwEditing) {
+    hwEditing = true;
+    const name = timetable[homeCurrentPeriod][homeCurrentDay];
+    const data = getSubjectData(name);
+    document.getElementById('hw-view-area').style.display='none';
+    const inp = document.getElementById('hw-input-field');
+    inp.style.display='';
+    inp.value = data.hw;
+    inp.focus();
+    document.getElementById('home-edit-btn').innerHTML = '<span>💾</span> 保存する';
+    document.getElementById('home-edit-btn').onclick = saveHwEdit;
+  }
+}
+
+function saveHwEdit() {
+  const name = timetable[homeCurrentPeriod][homeCurrentDay];
+  if(name) {
+    const d = getSubjectData(name);
+    d.hw = document.getElementById('hw-input-field').value;
+  }
+  cancelHwEdit();
+  renderHome();
+}
+
+function cancelHwEdit() {
+  hwEditing = false;
+  document.getElementById('hw-view-area').style.display='';
+  document.getElementById('hw-input-field').style.display='none';
+  document.getElementById('home-edit-btn').innerHTML = '<span>✏️</span> 内容を変更する';
+  document.getElementById('home-edit-btn').onclick = toggleHwEdit;
+}
+
+function promoteNextClass() {
+  const nc = document.getElementById('next-card');
+  if(nc._targetPeriod !== undefined) {
+    homeCurrentPeriod = nc._targetPeriod;
+    homeCurrentDay = nc._targetDay;
+    renderHome();
+  }
+}
+
+function promotePrevClass() {
+  const pc = document.getElementById('prev-card');
+  if(pc._targetPeriod !== undefined) {
+    homeCurrentPeriod = pc._targetPeriod;
+    homeCurrentDay = pc._targetDay;
+    renderHome();
+  }
+}
+
+/* ══════════════════════════════════
+   SCHEDULE GRID
+══════════════════════════════════ */
+let pendingModalCell = null; // {pi, di}
+
+function renderScheduleGrid() {
+  const body = document.getElementById('schedule-grid-body');
+  body.innerHTML = '';
+  for(let pi=0;pi<DAYS;pi++){
+    const row = document.createElement('div');
+    row.className = 'grid-row';
+    // Period number
+    const pn = document.createElement('div');
+    pn.className='p-num'; pn.textContent=(pi+1);
+    row.appendChild(pn);
+    for(let di=0;di<COLS;di++){
+      const name = timetable[pi][di];
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (name ? ' '+getColor(name) : ' cell-empty');
+      // Subject text
+      const st = document.createElement('div');
+      st.className='cell-subj'; st.textContent=name||'';
+      cell.appendChild(st);
+      // Arrow button (only if name exists)
+      if(name){
+        const abtn = document.createElement('span');
+        abtn.className='arrow-btn';
+        abtn.style.cssText='position:absolute;bottom:2px;right:2px;font-size:9px;padding:1px 4px;gap:1px;';
+        abtn.innerHTML='›';
+        abtn.onclick=(e)=>{ e.stopPropagation(); openCiDetailByName(name); };
+        cell.appendChild(abtn);
+      }
+      cell.onclick=(()=>{const _pi=pi,_di=di;return()=>openCellModal(_pi,_di);})();
+      row.appendChild(cell);
+    }
+    body.appendChild(row);
+  }
+}
+
+function openCellModal(pi, di) {
+  pendingModalCell = {pi, di};
+  const dayName = DAY_NAMES[di];
+  document.getElementById('modal-cell-pos').textContent = dayName+'曜日 '+(pi+1)+'限目';
+  document.getElementById('modal-cell-input').value = timetable[pi][di];
+  document.getElementById('cell-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-cell-input').focus(),100);
+}
+
+function closeModal() {
+  document.getElementById('cell-modal').classList.remove('open');
+  pendingModalCell = null;
+}
+
+function confirmCellName() {
+  if(!pendingModalCell) return;
+  const {pi, di} = pendingModalCell;
+  const val = document.getElementById('modal-cell-input').value.trim();
+  timetable[pi][di] = val;
+  closeModal();
+  renderScheduleGrid();
+}
+
+document.getElementById('modal-cell-input').addEventListener('keydown', e => {
+  if(e.key==='Enter') confirmCellName();
+  if(e.key==='Escape') closeModal();
+});
+
+/* ══════════════════════════════════
+   CONTENT INPUT
+══════════════════════════════════ */
+let currentCiSubject = null;
+
+function showCiList() {
+  document.getElementById('ci-list-view').style.display='';
+  document.getElementById('ci-detail-view').style.display='none';
+  renderCiList();
+}
+
+function renderCiList() {
+  const list = document.getElementById('ci-subject-list');
+  list.innerHTML='';
+  const subjects = getAllSubjectNames();
+  if(subjects.length===0){
+    list.innerHTML='<div style="font-size:13px;color:var(--text-hint);padding:16px 0;">時間割に授業が登録されていません。<br>先に時間割設定で授業名を入力してください。</div>';
+    return;
+  }
+  subjects.forEach(name=>{
+    const d=getSubjectData(name);
+    const card=document.createElement('div');
+    card.style.cssText='background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;cursor:pointer;';
+    card.innerHTML=`
+      <div style="width:36px;height:36px;border-radius:10px;background:var(--violet-lt);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📚</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:700;color:var(--text-primary);">${name}</div>
+        <div style="font-size:11px;color:var(--text-hint);margin-top:2px;">${d.items.length}件の持ち物・${d.hw?'宿題あり':'宿題なし'}</div>
+      </div>
+      <div style="font-size:20px;color:var(--text-hint);">›</div>`;
+    card.onclick=()=>openCiDetailByName(name);
+    list.appendChild(card);
+  });
+}
+
+function openCiDetailByName(name) {
+  currentCiSubject = name;
+  switchTo('input');
+  document.getElementById('ci-list-view').style.display='none';
+  document.getElementById('ci-detail-view').style.display='';
+  document.getElementById('ci-detail-name').textContent = name;
+  document.getElementById('ci-detail-days').textContent = getSubjectDays(name);
+  const d = getSubjectData(name);
+  document.getElementById('ci-hw-input').value = d.hw;
+  renderCiItemsList(d.items);
+}
+
+function renderCiItemsList(items) {
+  const cont = document.getElementById('ci-items-container');
+  cont.innerHTML='';
+  items.forEach((it,idx)=>{
+    const row=document.createElement('div'); row.className='ci-item-row';
+    const inp=document.createElement('input');
+    inp.className='ci-item-input'; inp.type='text'; inp.value=it;
+    inp.placeholder='持ち物を入力…'; inp.dataset.idx=idx;
+    const del=document.createElement('button'); del.className='ci-del-btn';
+    del.textContent='×';
+    del.onclick=(()=>{const _idx=idx;return()=>deleteCiItem(_idx);})();
+    row.appendChild(inp); row.appendChild(del);
+    cont.appendChild(row);
+  });
+}
+
+function addCiItem() {
+  if(!currentCiSubject) return;
+  const d = getSubjectData(currentCiSubject);
+  d.items.push('');
+  renderCiItemsList(d.items);
+  const inputs = document.querySelectorAll('.ci-item-input');
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+
+function deleteCiItem(idx) {
+  if(!currentCiSubject) return;
+  const d = getSubjectData(currentCiSubject);
+  d.items.splice(idx,1);
+  renderCiItemsList(d.items);
+}
+
+function saveCiDetail() {
+  if(!currentCiSubject) return;
+  const d = getSubjectData(currentCiSubject);
+  d.hw = document.getElementById('ci-hw-input').value;
+  d.items = Array.from(document.querySelectorAll('.ci-item-input')).map(i=>i.value).filter(v=>v.trim());
+  // toast feedback
+  const btn = document.querySelector('.save-btn');
+  const orig = btn.textContent;
+  btn.textContent = '✓ 保存しました';
+  btn.style.opacity='.7';
+  setTimeout(()=>{ btn.textContent=orig; btn.style.opacity=''; },1200);
+  renderHome();
+}
+
+/* ══════════════════════════════════
+   INIT
+══════════════════════════════════ */
+// Precompute colors for initial subjects
+getAllSubjectNames().forEach(n=>getColor(n));
+renderHome();
+renderScheduleGrid();
+renderCiList();
+</script>
+</body>
+</html>
